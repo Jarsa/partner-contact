@@ -25,11 +25,11 @@ class ResCityZip(models.Model):
     display_name = fields.Char(compute='_compute_new_display_name',
                                store=True, index=True)
 
-    _sql_constraints = [
-        ('name_city_uniq', 'UNIQUE(name, city_id)',
-         'You already have a zip with that code in the same city. '
-         'The zip code must be unique within it\'s city'),
-    ]
+    
+        
+ 
+
+         
 
     @api.multi
     @api.depends('name', 'city_id', 'city_id.state_id', 'city_id.country_id')
