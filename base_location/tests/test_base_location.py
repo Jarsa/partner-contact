@@ -295,10 +295,21 @@ class TestBaseLocation(common.TransactionCase):
             }
         )
 
+    def _set_company_address_view(self, address_view):
+        """Move the company to a country that uses the given address view.
+
+        The country has no states, so the test does not depend on the
+        modules that make the state of an address required.
+        """
+        country = self.env["res.country"].create(
+            {"name": "Address view country", "code": "ZV"}
+        )
+        country.address_view_id = address_view
+        self.company.country_id = country
+
     def test_country_address_view_keeps_zip_id(self):
         """The ZIP completion survives a country specific address view."""
-        self.company.country_id = self.country_es
-        self.country_es.address_view_id = self._create_address_view()
+        self._set_company_address_view(self._create_address_view())
         view = self.env.ref("base.view_partner_form")
         arch = etree.fromstring(
             self.partner_obj.get_view(view.id, "form")["arch"].encode()
@@ -318,8 +329,7 @@ class TestBaseLocation(common.TransactionCase):
 
     def test_address_view_without_country_view(self):
         """Nothing is added when the country has no address view."""
-        self.company.country_id = self.country_es
-        self.country_es.address_view_id = False
+        self._set_company_address_view(False)
         address_view = self._create_address_view()
         arch = etree.fromstring(
             self.partner_obj.get_view(address_view.id, "form")["arch"].encode()
@@ -332,8 +342,7 @@ class TestBaseLocation(common.TransactionCase):
         address_view.arch = address_view.arch.replace(
             '<field name="zip"/>', '<field name="zip"/><field name="zip_id"/>'
         )
-        self.company.country_id = self.country_es
-        self.country_es.address_view_id = address_view
+        self._set_company_address_view(address_view)
         view = self.env.ref("base.view_partner_form")
         arch = etree.fromstring(
             self.partner_obj.get_view(view.id, "form")["arch"].encode()
@@ -343,8 +352,7 @@ class TestBaseLocation(common.TransactionCase):
 
     def test_country_address_view_form(self):
         """The completion still fills the address with a country address view."""
-        self.company.country_id = self.country_es
-        self.country_es.address_view_id = self._create_address_view()
+        self._set_company_address_view(self._create_address_view())
         with Form(self.partner_obj) as partner_form:
             partner_form.name = "Address view partner"
             partner_form.zip_id = self.barcelona
